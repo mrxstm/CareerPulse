@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
+import resumeRoutes from "./routes/resumeRoutes.js";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/errorMiddleware.js";
 
@@ -16,6 +17,7 @@ app.use(cookieParser());
 //routes 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/resume", resumeRoutes);
 
 //error handler 
 app.use(errorHandler);
