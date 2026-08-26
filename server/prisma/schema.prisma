@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password      String
+  profile_image String?  @map("profile_image")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  resume Resume[]
+}
+
+model Resume {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  title         String
+  pdfUrl        String?  @map("pdf_url")
+  extractedText String?  @map("extracted_text")
+  parsedResume  Json?    @map("parsed_resume")
+  version       Int
+  isDefault     Boolean  @default(false) @map("is_default")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user     User       @relation(fields: [userId], references: [id])
+  analyses Analysis[]
+}
+
+model JobDescription {
+  id          Int      @id @default(autoincrement())
+  title       String
+  company     String?
+  description String
+  sourceUrl   String?  @map("source_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  analyses Analysis[]
+}
+
+model Analysis {
+  id               Int      @id @default(autoincrement())
+  resumeId         Int      @map("resume_id")
+  jobDescriptionId Int      @map("job_description_id")
+  status           String
+  aiModel          String?  @map("ai_model")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  resume         Resume         @relation(fields: [resumeId], references: [id])
+  jobDescription JobDescription @relation(fields: [jobDescriptionId], references: [id])
+
+  result  AnalysisResult?
+  skills  AnalysisSkill[]
+  roadmap Roadmap?
+}
+
+model AnalysisResult {
+  id                Int      @id @default(autoincrement())
+  analysisId        Int      @unique @map("analysis_id")
+  summary           String?
+  overallFeedback   String?
+  readinessLevel    String?  @map("readiness_level")
+  overallConfidence Float?   @map("overall_confidence")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  analysis Analysis @relation(fields: [analysisId], references: [id])
+}
+
+model Skill {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  category String?
+
+  analysisSkills AnalysisSkill[]
+}
+
+model AnalysisSkill {
+  id         Int     @id @default(autoincrement())
+  analysisId Int     @map("analysis_id")
+  skillId    Int     @map("skill_id")
+  status     String
+  confidence Float?
+  evidence   String?
+
+  analysis Analysis @relation(fields: [analysisId], references: [id])
+  skill    Skill    @relation(fields: [skillId], references: [id])
+
+  @@unique([analysisId, skillId])
+}
+
+model Roadmap {
+  id                Int      @id @default(autoincrement())
+  analysisId        Int      @unique @map("analysis_id")
+  title             String
+  description       String?
+  estimatedDuration String?  @map("estimated_duration")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  analysis Analysis      @relation(fields: [analysisId], references: [id])
+  steps    RoadmapStep[]
+}
+
+model RoadmapStep {
+  id                Int     @id @default(autoincrement())
+  roadmapId         Int     @map("roadmap_id")
+  title             String
+  description       String?
+  stepOrder         Int     @map("step_order")
+  estimatedDuration String? @map("estimated_duration")
+  completed         Boolean @default(false)
+
+  roadmap Roadmap @relation(fields: [roadmapId], references: [id])
+
+  @@unique([roadmapId, stepOrder])
+}
