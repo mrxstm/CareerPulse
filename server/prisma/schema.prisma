@@ -21,7 +21,8 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  resume Resume[]
+  jobDescriptions JobDescription[]
+  resume          Resume[]
 }
 
 model Resume {
@@ -42,12 +43,14 @@ model Resume {
 
 model JobDescription {
   id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
   title       String
   company     String?
   description String
   sourceUrl   String?  @map("source_url")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   analyses Analysis[]
 }
 

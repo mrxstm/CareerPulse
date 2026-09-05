@@ -1,4 +1,6 @@
 import prisma from "../config/prisma.js";
+import { extractResumeDetails } from "../services/aiService.js";
+import { extractResumeText } from "../services/resumeService.js";
 
 export const uploadResume = async (req, res, next) => {
     try {
@@ -25,12 +27,20 @@ export const uploadResume = async (req, res, next) => {
             });
         }
 
+        //readfile fetched the text of resume
+        const resumeRawText = await extractResumeText(req.file.path);
+
+        //gemini structured json
+        const resumeParsed = await extractResumeDetails(resumeRawText);
+
         // Creating resume
         const resume = await prisma.resume.create({
             data: {
                 userId,
                 title,
                 pdfUrl: req.file.path,
+                extractedText: resumeRawText,
+                parsedResume: resumeParsed,
                 version: 1
             }
         });
